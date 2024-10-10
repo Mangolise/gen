@@ -108,65 +108,13 @@ public class MangoGenRegistry implements GenRegistry {
         };
     }
 
-    // Tools
-    public static final ItemStack MULTITOOL = createItem(Material.TRIPWIRE_HOOK, Component.text("Multitool").color(NamedTextColor.WHITE))
-            .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(Block.OAK_PLANKS, Block.STONE, Block.WHEAT), false))
-            .lore(Component.text("Can break oak planks, stone and wheat")
-                    .color(NamedTextColor.GREEN).decoration(TextDecoration.ITALIC, false))
-            .build().withTag(ITEM_SAVE_ID, 1);
-
-    @Override
-    public ItemStack getMultitool() {
-        return MULTITOOL;
-    }
-
-    private static ItemStack createToolItem(Material material, String name, TextColor color, float mineSpeed, int level, int tier, int type, List<Block> blocks, int limit) {
-        Block[] blockArray = blocks.subList(0, limit).toArray(Block[]::new);
-        mineSpeed *= level * 0.5f + 1f; // each level give 25% more mining speed
-
-        if (level > 255) {
-            throw new IndexOutOfBoundsException("Level must be 255 or less");
-        }
-
-        return createItem(material, Component.text(name + (level + 1)).color(color).decorate(TextDecoration.BOLD))
-                .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(blockArray), false))
-                .set(ItemComponent.TOOL, new Tool(List.of(new Tool.Rule(new BlockTypeFilter.Blocks(blockArray), mineSpeed, true)), mineSpeed, 1))
-                .build().withTag(ITEM_SAVE_ID, ((level & 0xFF) << 24) | ((tier & 0xF) << 20) | ((type & 0x7) << 17) | 65536);
-    }
-
-    @Override
-    public ItemStack getTool(MaterialType type, int tier, int level) {
-        return switch (type) {
-            case WOOD -> switch (tier) {
-                case 0 -> createToolItem(Material.WOODEN_AXE, "Oak Axe ", OAK_COLOR, 1f, level, tier, 0, WOOD_BLOCKS, 1);
-                case 1 -> createToolItem(Material.STONE_AXE, "Birch Axe ", BIRCH_COLOR, 1f, level, tier, 0, WOOD_BLOCKS, 2);
-                case 2 -> createToolItem(Material.IRON_AXE, "Spruce Axe ", SPRUCE_COLOR, 1f, level, tier, 0, WOOD_BLOCKS, 3);
-                case 3 -> createToolItem(Material.DIAMOND_AXE, "Jungle Axe ", JUNGLE_COLOR, 1f, level, tier, 0, WOOD_BLOCKS, 4);
-                default -> throw new IndexOutOfBoundsException();
-            };
-
-            case STONE -> switch (tier) {
-                case 0 -> createToolItem(Material.STONE_PICKAXE, "Stone Pickaxe ", STONE_COLOR, 1f, level, tier, 1, STONE_BLOCKS, 1);
-                case 1 -> createToolItem(Material.IRON_PICKAXE, "Iron Pickaxe ", IRON_COLOR, 1f, level, tier, 1, STONE_BLOCKS, 2);
-                case 2 -> createToolItem(Material.DIAMOND_PICKAXE, "Diamond Pickaxe ", DIAMOND_COLOR, 1f, level, tier, 1, STONE_BLOCKS, 3);
-                case 3 -> createToolItem(Material.NETHERITE_PICKAXE, "Netherite Pickaxe ", NETHERITE_COLOR, 1f, level, tier, 1, STONE_BLOCKS, 5);
-                default -> throw new IndexOutOfBoundsException();
-            };
-
-            case PLANTS -> switch (tier) {
-                case 0 -> createToolItem(Material.WOODEN_HOE, "Wheat Hoe ", WHEAT_COLOR, 1f, level, tier, 2, PLANT_BLOCKS, 1);
-                case 1 -> createToolItem(Material.STONE_HOE, "Rose Hoe ", ROSE_COLOR, 1f, level, tier, 2, PLANT_BLOCKS, 2);
-                case 2 -> createToolItem(Material.IRON_HOE, "Berry Hoe ", BERRY_COLOR, 1f, level, tier, 2, PLANT_BLOCKS, 3);
-                case 3 -> createToolItem(Material.DIAMOND_HOE, "Potato Hoe ", POTATO_COLOR, 1f, level, tier, 2, PLANT_BLOCKS, 4);
-                default -> throw new IndexOutOfBoundsException();
-            };
-        };
-    }
-
     // Blocks
     private static final List<Block> WOOD_BLOCKS = List.of(Block.OAK_PLANKS, Block.BIRCH_PLANKS, Block.SPRUCE_PLANKS, Block.JUNGLE_PLANKS);
+    private static final List<Component> WOOD_BLOCK_NAMES = List.of(Component.text("Oak").color(OAK_COLOR), Component.text("Birch").color(BIRCH_COLOR), Component.text("Spruce").color(SPRUCE_COLOR), Component.text("Jungle").color(JUNGLE_COLOR));
     private static final List<Block> STONE_BLOCKS = List.of(Block.STONE, Block.IRON_ORE, Block.DEEPSLATE_DIAMOND_ORE, Block.NETHER_GOLD_ORE, Block.ANCIENT_DEBRIS);
+    private static final List<Component> STONE_BLOCK_NAMES = List.of(Component.text("Stone").color(STONE_COLOR), Component.text("Iron").color(IRON_COLOR), Component.text("Diamond").color(DIAMOND_COLOR), Component.text("Gold").color(GOLD_COLOR), Component.text("Ancient Debris", NETHERITE_COLOR));
     private static final List<Block> PLANT_BLOCKS = List.of(Block.WHEAT, Block.ROSE_BUSH, Block.SWEET_BERRY_BUSH, Block.POTATOES);
+    private static final List<Component> PLANT_BLOCK_NAMES = List.of(Component.text("Wheat").color(WHEAT_COLOR), Component.text("Roses").color(ROSE_COLOR), Component.text("Sweet Berry").color(BERRY_COLOR), Component.text("Potatoes").color(POTATO_COLOR));
 
     private static final Map<Integer, GenBlock> breakableStateIds;
 
@@ -190,6 +138,89 @@ public class MangoGenRegistry implements GenRegistry {
         createGenBlock(Block.ROSE_BUSH, new ItemDrop(UNCOMPRESSED_MATS.get(10)));
         createGenBlock(Block.SWEET_BERRY_BUSH.withProperty("age", "3"), new ItemDrop(UNCOMPRESSED_MATS.get(11)));
         createGenBlock(Block.POTATOES.withProperty("age", "7"), new ItemDrop(UNCOMPRESSED_MATS.get(12)));
+    }
+
+    // Tools
+    public static final ItemStack MULTITOOL = createItem(Material.TRIPWIRE_HOOK, Component.text("Multitool").color(NamedTextColor.WHITE))
+            .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(Block.OAK_PLANKS, Block.STONE, Block.WHEAT), false))
+            .set(ItemComponent.TOOL, new Tool(List.of(
+                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.OAK_PLANKS), 0.5f, true),
+                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.STONE), 0.5f, true),
+                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.WHEAT), 0.5f, true)
+            ), 1f, 1))
+            .lore(Component.text("Can break ").color(NamedTextColor.GRAY)
+                    .append(WOOD_BLOCK_NAMES.getFirst()).append(Component.text(", ").color(NamedTextColor.GRAY))
+                    .append(STONE_BLOCK_NAMES.getFirst()).append(Component.text(" and ").color(NamedTextColor.GRAY))
+                    .append(PLANT_BLOCK_NAMES.getFirst()))
+            .build().withTag(ITEM_SAVE_ID, 1);
+
+    @Override
+    public ItemStack getMultitool() {
+        return MULTITOOL;
+    }
+
+    private static ItemStack createToolItem(Material material, String name, TextColor color, float mineSpeed, int level, int tier, MaterialType type, List<Block> blocks, int limit) {
+        Block[] blockArray = blocks.subList(0, limit).toArray(Block[]::new);
+        mineSpeed *= level * 0.3f + 1f; // each level give 30% more mining speed
+
+        if (level > 255) {
+            throw new IndexOutOfBoundsException("Level must be 255 or less");
+        }
+
+        Component lore = Component.text("Can break ").color(NamedTextColor.GRAY);
+        for (int i = 0;;) {
+            lore = lore.append(switch (type) {
+                case WOOD -> WOOD_BLOCK_NAMES.get(i);
+                case STONE -> STONE_BLOCK_NAMES.get(i);
+                case PLANTS -> PLANT_BLOCK_NAMES.get(i);
+            });
+
+            i++;
+            if (i >= limit) {
+                break;
+            }
+
+            if (i + 1 >= limit) {
+                lore = lore.append(Component.text(" and ").color(NamedTextColor.GRAY));
+            } else {
+                lore = lore.append(Component.text(", ").color(NamedTextColor.GRAY));
+            }
+        }
+
+        return createItem(material, Component.text(name + (level + 1)).color(color).decorate(TextDecoration.BOLD))
+                .lore(lore)
+                .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(blockArray), false))
+                .set(ItemComponent.TOOL, new Tool(List.of(new Tool.Rule(new BlockTypeFilter.Blocks(blockArray), mineSpeed, true)), mineSpeed, 1))
+                .build().withTag(ITEM_SAVE_ID, ((level & 0xFF) << 24) | ((tier & 0xF) << 20) | ((type.id & 0x7) << 17) | 65536);
+    }
+
+    @Override
+    public ItemStack getTool(MaterialType type, int tier, int level) {
+        return switch (type) {
+            case WOOD -> switch (tier) {
+                case 0 -> createToolItem(Material.WOODEN_AXE, "Oak Axe ", OAK_COLOR, 1f, level, tier, MaterialType.WOOD, WOOD_BLOCKS, 1);
+                case 1 -> createToolItem(Material.STONE_AXE, "Birch Axe ", BIRCH_COLOR, 2.2f, level, tier, MaterialType.WOOD, WOOD_BLOCKS, 2);
+                case 2 -> createToolItem(Material.IRON_AXE, "Spruce Axe ", SPRUCE_COLOR, 4.84f, level, tier, MaterialType.WOOD, WOOD_BLOCKS, 3);
+                case 3 -> createToolItem(Material.DIAMOND_AXE, "Jungle Axe ", JUNGLE_COLOR, 10.648f, level, tier, MaterialType.WOOD, WOOD_BLOCKS, 4);
+                default -> throw new IndexOutOfBoundsException();
+            };
+
+            case STONE -> switch (tier) {
+                case 0 -> createToolItem(Material.STONE_PICKAXE, "Stone Pickaxe ", STONE_COLOR, 1f, level, tier, MaterialType.STONE, STONE_BLOCKS, 1);
+                case 1 -> createToolItem(Material.IRON_PICKAXE, "Iron Pickaxe ", IRON_COLOR, 1f, level, tier, MaterialType.STONE, STONE_BLOCKS, 2);
+                case 2 -> createToolItem(Material.DIAMOND_PICKAXE, "Diamond Pickaxe ", DIAMOND_COLOR, 1f, level, tier, MaterialType.STONE, STONE_BLOCKS, 3);
+                case 3 -> createToolItem(Material.NETHERITE_PICKAXE, "Netherite Pickaxe ", NETHERITE_COLOR, 1f, level, tier, MaterialType.STONE, STONE_BLOCKS, 5);
+                default -> throw new IndexOutOfBoundsException();
+            };
+
+            case PLANTS -> switch (tier) {
+                case 0 -> createToolItem(Material.WOODEN_HOE, "Wheat Hoe ", WHEAT_COLOR, 1f, level, tier, MaterialType.PLANTS, PLANT_BLOCKS, 1);
+                case 1 -> createToolItem(Material.STONE_HOE, "Rose Hoe ", ROSE_COLOR, 1f, level, tier, MaterialType.PLANTS, PLANT_BLOCKS, 2);
+                case 2 -> createToolItem(Material.IRON_HOE, "Berry Hoe ", BERRY_COLOR, 1f, level, tier, MaterialType.PLANTS, PLANT_BLOCKS, 3);
+                case 3 -> createToolItem(Material.DIAMOND_HOE, "Potato Hoe ", POTATO_COLOR, 1f, level, tier, MaterialType.PLANTS, PLANT_BLOCKS, 4);
+                default -> throw new IndexOutOfBoundsException();
+            };
+        };
     }
 
     @Override
@@ -312,7 +343,7 @@ public class MangoGenRegistry implements GenRegistry {
             case 0 -> ItemStack.AIR;
             case 1 -> MULTITOOL;
             default -> {
-                Log.logger().warn("SaveId for item {} is out of bounds, returning air", saveId);
+                Log.logger().warn("SaveId for item {} is out of bounds", saveId);
                 yield LOAD_FAIL_ITEM.withLore(Component.text("normal item fail, Item id: " + saveId));
             }
         };
