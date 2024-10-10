@@ -1,5 +1,6 @@
 package net.mangolise.gen.defaults;
 
+import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -10,6 +11,8 @@ import net.mangolise.gen.registry.GenBlock;
 import net.mangolise.gen.registry.GenRegistry;
 import net.mangolise.gen.registry.ItemDrop;
 import net.mangolise.gen.registry.MaterialType;
+import net.minestom.server.collision.BoundingBox;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.predicate.BlockPredicate;
@@ -251,6 +254,33 @@ public class MangoGenRegistry implements GenRegistry {
     @Override
     public int getIngredientTierCount(MaterialType type, boolean compressed) {
         return type != MaterialType.STONE || compressed ? 4 : 5;
+    }
+
+    // Spawns
+    private static final DoubleList spawns = DoubleList.of(
+            -10d, -10d, 9d, 9d, // Main Spawn
+            -12d, -38d, -10d, -30d, // Oak Shop
+            -21, -18, -12d, -16d,    // Wheat Shop
+            21, 8, 29, 11           // Stone Shop
+    );
+
+    @Override
+    public boolean isInSpawn(Player player, Pos newPosition) {
+        BoundingBox box = player.getBoundingBox();
+
+        for (int i = 0; i < spawns.size(); i += 4) {
+            double x1 = spawns.getDouble(i);
+            double z1 = spawns.getDouble(i + 1);
+            double x2 = spawns.getDouble(i + 2) + 1;
+            double z2 = spawns.getDouble(i + 3) + 1;
+
+            if (newPosition.x() + box.maxX() > x1 && newPosition.z() + box.maxZ() > z1 &&
+                    newPosition.x() + box.minX() < x2 && newPosition.z() + box.minZ() < z2) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Saving

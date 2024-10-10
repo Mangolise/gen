@@ -3,6 +3,7 @@ package net.mangolise.gen;
 import net.hollowcube.polar.PolarLoader;
 import net.mangolise.combat.CombatConfig;
 import net.mangolise.combat.MangoCombat;
+import net.mangolise.combat.events.PlayerAttackEvent;
 import net.mangolise.gamesdk.BaseGame;
 import net.mangolise.gamesdk.features.AdminCommandsFeature;
 import net.mangolise.gamesdk.features.EnderChestFeature;
@@ -59,6 +60,15 @@ public class GenGame extends BaseGame<GenGame.Config> {
         events.addListener(PlayerSpawnEvent.class, e -> {
             if (e.isFirstSpawn()) {
                 ((GenPlayer) e.getPlayer()).onFirstSpawn();
+            }
+        });
+
+        events.addListener(PlayerAttackEvent.class, e -> {
+            GenPlayer victim = (GenPlayer) e.victim();
+            GenPlayer attacker = (GenPlayer) e.attacker();
+
+            if (victim.isInSpawn() || attacker.isInSpawn()) {
+                e.setCancelled(true);
             }
         });
 

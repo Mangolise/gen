@@ -7,6 +7,7 @@ import net.mangolise.gen.registry.GenBlock;
 import net.mangolise.gen.registry.GenRegistry;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.Damage;
@@ -36,6 +37,7 @@ public class GenPlayer extends Player {
     private final GenRegistry registry;
     private boolean inventoryChanged = false;
     private boolean stop = false;
+    private boolean inSpawn = true;
 
     public GenPlayer(@NotNull UUID uuid, @NotNull String username, @NotNull PlayerConnection playerConnection) {
         super(uuid, username, playerConnection);
@@ -59,7 +61,8 @@ public class GenPlayer extends Player {
     }
 
     private void onMove(PlayerMoveEvent e) {
-        if (getGameMode().equals(GameMode.CREATIVE)) {
+        if (getGameMode().equals(GameMode.CREATIVE) ||
+                getPosition().distanceSquared(e.getNewPosition()) < Vec.EPSILON) {
             return;
         }
 
@@ -67,6 +70,8 @@ public class GenPlayer extends Player {
         if (newPos.y() < 32) {
             damage(new Damage(DamageType.FALL, null, null, null, 100000));
         }
+
+        inSpawn = registry.isInSpawn(this, newPos);
     }
 
     private void onDrop(ItemDropEvent e) {
@@ -130,5 +135,9 @@ public class GenPlayer extends Player {
         }
 
         return TaskSchedule.minutes(5);
+    }
+
+    public boolean isInSpawn() {
+        return inSpawn;
     }
 }
