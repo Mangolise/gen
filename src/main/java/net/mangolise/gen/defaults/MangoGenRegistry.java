@@ -12,18 +12,19 @@ import net.mangolise.gen.registry.GenRegistry;
 import net.mangolise.gen.registry.ItemDrop;
 import net.mangolise.gen.registry.MaterialType;
 import net.minestom.server.collision.BoundingBox;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.predicate.BlockPredicate;
-import net.minestom.server.instance.block.predicate.BlockTypeFilter;
 import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.PlayerInventory;
-import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.BlockPredicates;
 import net.minestom.server.item.component.Tool;
+import net.minestom.server.network.packet.server.common.TagsPacket;
+import net.minestom.server.registry.RegistryTag;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.Nullable;
 
@@ -145,12 +146,12 @@ public class MangoGenRegistry implements GenRegistry {
 
     // Tools
     public static final ItemStack MULTITOOL = createItem(Material.TRIPWIRE_HOOK, Component.text("Multitool").color(NamedTextColor.WHITE))
-            .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(Block.OAK_PLANKS, Block.STONE, Block.WHEAT), false))
-            .set(ItemComponent.TOOL, new Tool(List.of(
-                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.OAK_PLANKS), 0.5f, true),
-                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.STONE), 0.5f, true),
-                    new Tool.Rule(new BlockTypeFilter.Blocks(Block.WHEAT), 0.5f, true)
-            ), 1f, 1))
+            .set(DataComponents.CAN_BREAK, new BlockPredicates(new BlockPredicate(Block.OAK_PLANKS, Block.STONE, Block.WHEAT)))
+            .set(DataComponents.TOOL, new Tool(List.of(
+                    new Tool.Rule(RegistryTag.direct(Block.OAK_PLANKS), 0.5f, true),
+                    new Tool.Rule(RegistryTag.direct(Block.STONE), 0.5f, true),
+                    new Tool.Rule(RegistryTag.direct(Block.WHEAT), 0.5f, true)
+            ), 1f, 1, true))
             .lore(Component.text("Can break ").color(NamedTextColor.GRAY)
                     .append(WOOD_BLOCK_NAMES.getFirst()).append(Component.text(", ").color(NamedTextColor.GRAY))
                     .append(STONE_BLOCK_NAMES.getFirst()).append(Component.text(" and ").color(NamedTextColor.GRAY))
@@ -192,8 +193,8 @@ public class MangoGenRegistry implements GenRegistry {
 
         return createItem(material, Component.text(name + (level + 1)).color(color).decorate(TextDecoration.BOLD))
                 .lore(lore)
-                .set(ItemComponent.CAN_BREAK, new BlockPredicates(new BlockPredicate(blockArray), false))
-                .set(ItemComponent.TOOL, new Tool(List.of(new Tool.Rule(new BlockTypeFilter.Blocks(blockArray), mineSpeed, true)), mineSpeed, 1))
+                .set(DataComponents.CAN_BREAK, new BlockPredicates(new BlockPredicate(blockArray)))
+                .set(DataComponents.TOOL, new Tool(List.of(new Tool.Rule(RegistryTag.direct(blockArray), mineSpeed, true)), mineSpeed, 1, true))
                 .build().withTag(ITEM_SAVE_ID, ((level & 0xFF) << 24) | ((tier & 0xF) << 20) | ((type.id & 0x7) << 17) | 65536);
     }
 
