@@ -10,14 +10,14 @@ group = "net.mangolise"
 version = versionStr
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
     maven("https://maven.serble.net/snapshots/")
 }
 
 dependencies {
     implementation("net.mangolise:mango-game-sdk:latest")
-    implementation("net.minestom:minestom-snapshots:d0754f2a15")
+    implementation("net.minestom:minestom:2025.07.10b-1.21.7")
     implementation("net.mangolise:mango-combat:latest")
 }
 

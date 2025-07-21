@@ -10,6 +10,7 @@ import net.minestom.server.command.builder.arguments.ArgumentEnum;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.inventory.InventoryClickEvent;
+import net.minestom.server.inventory.AbstractInventory;
 import net.minestom.server.inventory.Inventory;
 import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.tag.Tag;
@@ -42,7 +43,7 @@ public class GenItemsCommand extends MangoliseCommand {
         player.openInventory(inv);
     }
 
-    private static void generateItems(Inventory inv, Type type) {
+    private static void generateItems(AbstractInventory inv, Type type) {
         inv.clear();
 
         switch (type) {
@@ -76,7 +77,7 @@ public class GenItemsCommand extends MangoliseCommand {
     }
 
     private void onClick(InventoryClickEvent e) {
-        Inventory inv = e.getPlayer().getOpenInventory();
+        AbstractInventory inv = e.getPlayer().getOpenInventory();
         if (inv == null) {
             return;
         }

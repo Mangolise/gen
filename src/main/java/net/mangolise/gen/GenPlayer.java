@@ -6,31 +6,30 @@ import net.mangolise.gamesdk.util.GameSdkUtils;
 import net.mangolise.gen.registry.GenBlock;
 import net.mangolise.gen.registry.GenRegistry;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
-import net.minestom.server.event.inventory.PlayerInventoryItemChangeEvent;
+import net.minestom.server.event.inventory.InventoryItemChangeEvent;
 import net.minestom.server.event.item.ItemDropEvent;
-import net.minestom.server.event.player.PlayerBlockBreakEvent;
-import net.minestom.server.event.player.PlayerBlockInteractEvent;
-import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.minestom.server.event.player.PlayerMoveEvent;
+import net.minestom.server.event.player.*;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.item.ItemComponent;
+import net.minestom.server.inventory.type.VillagerInventory;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.BlockPredicates;
+import net.minestom.server.network.packet.server.play.TradeListPacket;
+import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GenPlayer extends Player {
@@ -39,9 +38,8 @@ public class GenPlayer extends Player {
     private boolean stop = false;
     private boolean inSpawn = true;
 
-    public GenPlayer(@NotNull UUID uuid, @NotNull String username, @NotNull PlayerConnection playerConnection) {
-        super(uuid, username, playerConnection);
-
+    public GenPlayer(@NotNull PlayerConnection playerConnection, @NotNull GameProfile gameProfile) {
+        super(playerConnection, gameProfile);
         registry = GenGame.instance.config().registry();
     }
 
@@ -53,11 +51,28 @@ public class GenPlayer extends Player {
         eventNode().addListener(PlayerMoveEvent.class, this::onMove);
         eventNode().addListener(ItemDropEvent.class, this::onDrop);
         eventNode().addListener(PlayerBlockBreakEvent.class, this::onBlockBreak);
-        eventNode().addListener(PlayerInventoryItemChangeEvent.class, e -> inventoryChanged = true);
+//        eventNode().addListener(PlayerInventoryItemChangeEvent.class, e -> inventoryChanged = true);
         eventNode().addListener(PlayerDisconnectEvent.class, e -> {saveInventory(); stop = true;});
         eventNode().addListener(PlayerBlockInteractEvent.class, this::onBlockInteract);
 
         MinecraftServer.getSchedulerManager().scheduleTask(this::saveInventory, TaskSchedule.immediate());
+    }
+
+    public void onInventoryItemChange(InventoryItemChangeEvent e) {
+        if (inventory == getInventory()) {
+            inventoryChanged = true;
+        }
+
+        if (!((e.getInventory() instanceof VillagerInventory inv))) {
+            return;
+        }
+
+        for (TradeListPacket.Trade trade : inv.getTrades()) {
+            if (inv.getItemStack(0).material().equals(trade.inputItem1().material()) && inv.getItemStack(1).material().equals(trade.inputItem2().material())) {
+                inv.setItemStack(2, trade.result());
+                break;
+            }
+        }
     }
 
     private void onMove(PlayerMoveEvent e) {
@@ -90,7 +105,7 @@ public class GenPlayer extends Player {
         Block block = e.getBlock();
 
         // Test if the item is allowed to break this block in case they are in survival or are hacking
-        BlockPredicates canBreak = getItemInMainHand().get(ItemComponent.CAN_BREAK);
+        BlockPredicates canBreak = getItemInMainHand().get(DataComponents.CAN_BREAK);
         if ((canBreak == null || !canBreak.test(block)) && !creative) {
             e.setCancelled(true);
             return;
