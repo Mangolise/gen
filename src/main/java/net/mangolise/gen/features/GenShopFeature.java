@@ -4,16 +4,12 @@ import net.mangolise.gamesdk.Game;
 import net.mangolise.gen.GenGame;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.Entity;
-import net.minestom.server.entity.EntityType;
-import net.minestom.server.entity.Player;
-import net.minestom.server.event.inventory.InventoryItemChangeEvent;
+import net.minestom.server.entity.*;
 import net.minestom.server.event.player.PlayerEntityInteractEvent;
 import net.minestom.server.inventory.type.VillagerInventory;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.minestom.server.network.packet.client.play.ClientSelectTradePacket;
-import net.minestom.server.network.packet.server.play.TradeListPacket;
+import net.minestom.server.network.packet.server.play.*;
 
 public class GenShopFeature implements Game.Feature<Game> {
     public void createShopMenu(Player player) {

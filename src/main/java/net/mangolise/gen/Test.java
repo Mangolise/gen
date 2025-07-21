@@ -1,5 +1,6 @@
 package net.mangolise.gen;
 
+import net.mangolise.gamesdk.permissions.Permissions;
 import net.mangolise.gamesdk.util.GameSdkUtils;
 import net.mangolise.gen.defaults.HashMapMangoGenRegistrySave;
 import net.mangolise.gen.defaults.MangoGenRegistry;
@@ -20,7 +21,7 @@ public class Test {
 
         // give every permission to every player0
         MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerConfigurationEvent.class, e -> {
-            //e.getPlayer().addPermission(new Permission("*"));
+            Permissions.setPermission(e.getPlayer(), "*", true);
         });
 
         GenGame.Config config = new GenGame.Config(new MangoGenRegistry(new HashMapMangoGenRegistrySave()));

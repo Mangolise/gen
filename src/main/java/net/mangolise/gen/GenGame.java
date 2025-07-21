@@ -5,10 +5,7 @@ import net.mangolise.combat.CombatConfig;
 import net.mangolise.combat.MangoCombat;
 import net.mangolise.combat.events.PlayerAttackEvent;
 import net.mangolise.gamesdk.BaseGame;
-import net.mangolise.gamesdk.features.AdminCommandsFeature;
-import net.mangolise.gamesdk.features.EnderChestFeature;
-import net.mangolise.gamesdk.features.ItemDropFeature;
-import net.mangolise.gamesdk.features.ItemPickupFeature;
+import net.mangolise.gamesdk.features.*;
 import net.mangolise.gamesdk.log.Log;
 import net.mangolise.gamesdk.util.GameSdkUtils;
 import net.mangolise.gen.command.GenItemsCommand;
@@ -100,6 +97,7 @@ public class GenGame extends BaseGame<GenGame.Config> {
                 new ItemPickupFeature(),
                 new ItemDropFeature(),
                 new EnderChestFeature(),
+                new VillagerTradeFeature(),
                 new GenShopFeature()
         );
     }
