@@ -136,6 +136,9 @@ public class GenPlayer extends Player {
             e.setBlockingItemUse(true);
             return;
         }
+
+        e.setCancelled(true);
+        e.setBlockingItemUse(true);
     }
 
     private TaskSchedule saveInventory() {

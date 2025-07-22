@@ -25,6 +25,7 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.BlockPredicates;
 import net.minestom.server.item.component.Tool;
+import net.minestom.server.item.component.TooltipDisplay;
 import net.minestom.server.registry.RegistryTag;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 public class MangoGenRegistry implements GenRegistry {
     private static final Tag<Key> ITEM_ID = Tag.String("mangogen.item_id").map(Key::key, Key::asString);
@@ -93,9 +95,16 @@ public class MangoGenRegistry implements GenRegistry {
 
     private static final Map<Key, ItemStack> ITEMS = new HashMap<>() {
         private void createMatItem(@KeyPattern.Value final @NotNull String id, Material material, String name, TextColor color) {
+            createMatItem(id, material, name, color, item -> {});
+        }
+
+        private void createMatItem(@KeyPattern.Value final @NotNull String id, Material material, String name, TextColor color, Consumer<ItemStack.Builder> extra) {
             Key key = Key.key("mangogen", id);
-            put(key, createItem(material, Component.text(name).color(color).decorate(TextDecoration.BOLD))
-                    .build().withTag(ITEM_ID, key));
+            ItemStack.Builder item = createItem(material, Component.text(name).color(color).decorate(TextDecoration.BOLD))
+                    .set(ITEM_ID, key);
+            extra.accept(item);
+
+            put(key, item.build());
         }
 
         private void createToolItems(
@@ -156,8 +165,8 @@ public class MangoGenRegistry implements GenRegistry {
         createMatItem("netherite_scrap", Material.NETHERITE_SCRAP, "Netherite Scrap", NETHERITE_COLOR);
         createMatItem("wheat", Material.WHEAT, "Wheat", WHEAT_COLOR);
         createMatItem("rose", Material.POPPY, "Rose", ROSE_COLOR);
-        createMatItem("sweet_berries", Material.SWEET_BERRIES, "Sweet Berries", BERRY_COLOR);
-        createMatItem("potato", Material.POTATO, "Potato", POTATO_COLOR);
+        createMatItem("sweet_berries", Material.SWEET_BERRIES, "Sweet Berries", BERRY_COLOR, item -> item.remove(DataComponents.CONSUMABLE));
+        createMatItem("potato", Material.POTATO, "Potato", POTATO_COLOR, item -> item.remove(DataComponents.CONSUMABLE));
 
         // Compressed Mats
         createMatItem("oak_log", Material.OAK_LOG, "Oak Log", OAK_COLOR);
@@ -171,7 +180,7 @@ public class MangoGenRegistry implements GenRegistry {
         createMatItem("hay_bale", Material.HAY_BLOCK, "Hay Bale", WHEAT_COLOR);
         createMatItem("rose_bouquet", Material.ROSE_BUSH, "Rose Bouquet", ROSE_COLOR);
         createMatItem("sweet_berry_jam", Material.RED_GLAZED_TERRACOTTA, "Sweet Berry Jam", BERRY_COLOR);
-        createMatItem("baked_potato", Material.BAKED_POTATO, "Baked Potato", POTATO_COLOR);
+        createMatItem("baked_potato", Material.BAKED_POTATO, "Baked Potato", POTATO_COLOR, item -> item.remove(DataComponents.CONSUMABLE));
 
         // Multitool
         put(Key.key("mangogen:multitool"), createItem(Material.TRIPWIRE_HOOK, Component.text("Multitool").color(NamedTextColor.WHITE))
@@ -181,6 +190,7 @@ public class MangoGenRegistry implements GenRegistry {
                         new Tool.Rule(RegistryTag.direct(Block.STONE), 0.5f, true),
                         new Tool.Rule(RegistryTag.direct(Block.WHEAT), 0.5f, true)
                 ), 1f, 1, true))
+                .set(DataComponents.TOOLTIP_DISPLAY, new TooltipDisplay(false, Set.of(DataComponents.CAN_BREAK)))
                 .lore(Component.text("Can break ").color(NamedTextColor.GRAY)
                         .append(OAK_NAME).append(Component.text(", ").color(NamedTextColor.GRAY))
                         .append(STONE_NAME).append(Component.text(" and ").color(NamedTextColor.GRAY))
@@ -300,8 +310,6 @@ public class MangoGenRegistry implements GenRegistry {
             slots.add(getSlot(stack));
             counts.add(stack.amount());
         }
-
-        player.sendMessage(String.join(", ", slots));
 
         saveManager.save(player, new MangoGenRegistrySave.InventorySave(slots, counts));
     }
