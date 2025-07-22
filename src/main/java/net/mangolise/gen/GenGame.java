@@ -1,13 +1,11 @@
 package net.mangolise.gen;
 
-import net.hollowcube.polar.PolarLoader;
 import net.mangolise.combat.CombatConfig;
 import net.mangolise.combat.MangoCombat;
 import net.mangolise.combat.events.PlayerAttackEvent;
 import net.mangolise.gamesdk.BaseGame;
 import net.mangolise.gamesdk.features.*;
 import net.mangolise.gamesdk.log.Log;
-import net.mangolise.gamesdk.util.GameSdkUtils;
 import net.mangolise.gen.command.GenItemsCommand;
 import net.mangolise.gen.features.GenShopFeature;
 import net.mangolise.gen.registry.GenRegistry;
@@ -19,26 +17,23 @@ import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.inventory.InventoryItemChangeEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.instance.IChunkLoader;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.player.GameProfile;
-import net.minestom.server.registry.DynamicRegistry;
 import net.minestom.server.registry.RegistryKey;
 import net.minestom.server.world.DimensionType;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 public class GenGame extends BaseGame<GenGame.Config> {
-    public static GenGame instance;
-    public Instance instanceWorld;
+    public Instance instance;
 
     private final UuidProvider uuidProvider;
 
     public GenGame(GenGame.Config config, UuidProvider uuidProvider) {
         super(config);
         this.uuidProvider = uuidProvider;
-        instance = this;
     }
 
     @Override
@@ -46,20 +41,19 @@ public class GenGame extends BaseGame<GenGame.Config> {
         DimensionType dimension = DimensionType.builder().build();
         RegistryKey<DimensionType> dim = MinecraftServer.getDimensionTypeRegistry().register("gen", dimension);
 
-        PolarLoader loader = GameSdkUtils.getPolarLoaderFromResource("worlds/gen.polar");
-        instanceWorld = MinecraftServer.getInstanceManager().createInstanceContainer(dim, loader);
+        instance = MinecraftServer.getInstanceManager().createInstanceContainer(dim, config().loader());
 
-        MinecraftServer.getConnectionManager().setPlayerProvider((playerConnection, gameProfile) -> {
-            return new GenPlayer(playerConnection, new GameProfile(uuidProvider.supply(gameProfile.name()), gameProfile.name()));
-        });
+        MinecraftServer.getConnectionManager().setPlayerProvider((playerConnection, gameProfile) ->
+                new GenPlayer(playerConnection, new GameProfile(uuidProvider.supply(gameProfile.name()), gameProfile.name()), config().registry));
+
         MangoCombat.enableGlobal(CombatConfig.create().withFakeDeath(false).withAutomaticRespawn(true).withVoidDeath(false));
 
-        MinecraftServer.getCommandManager().register(new GenItemsCommand());
+        MinecraftServer.getCommandManager().register(new GenItemsCommand(config().registry));
 
         // Player spawning
         GlobalEventHandler events = MinecraftServer.getGlobalEventHandler();
         events.addListener(AsyncPlayerConfigurationEvent.class, e -> {
-            e.setSpawningInstance(instanceWorld);
+            e.setSpawningInstance(instance);
 
             e.getPlayer().setGameMode(GameMode.ADVENTURE);
             e.getPlayer().setRespawnPoint(new Pos(0, 68, 0, 180, 0));
@@ -107,5 +101,5 @@ public class GenGame extends BaseGame<GenGame.Config> {
         UUID supply(String username);
     }
 
-    public record Config(GenRegistry registry) { }
+    public record Config(GenRegistry registry, IChunkLoader loader) { }
 }

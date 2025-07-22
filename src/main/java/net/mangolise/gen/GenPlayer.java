@@ -3,7 +3,7 @@ package net.mangolise.gen;
 import net.kyori.adventure.sound.Sound;
 import net.mangolise.gamesdk.features.EnderChestFeature;
 import net.mangolise.gamesdk.util.GameSdkUtils;
-import net.mangolise.gen.registry.GenBlock;
+import net.mangolise.gen.registry.GenBlockDrop;
 import net.mangolise.gen.registry.GenRegistry;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.component.DataComponents;
@@ -38,9 +38,9 @@ public class GenPlayer extends Player {
     private boolean stop = false;
     private boolean inSpawn = true;
 
-    public GenPlayer(@NotNull PlayerConnection playerConnection, @NotNull GameProfile gameProfile) {
+    public GenPlayer(@NotNull PlayerConnection playerConnection, @NotNull GameProfile gameProfile, GenRegistry registry) {
         super(playerConnection, gameProfile);
-        registry = GenGame.instance.config().registry();
+        this.registry = registry;
     }
 
     public void onFirstSpawn() {
@@ -51,7 +51,6 @@ public class GenPlayer extends Player {
         eventNode().addListener(PlayerMoveEvent.class, this::onMove);
         eventNode().addListener(ItemDropEvent.class, this::onDrop);
         eventNode().addListener(PlayerBlockBreakEvent.class, this::onBlockBreak);
-//        eventNode().addListener(PlayerInventoryItemChangeEvent.class, e -> inventoryChanged = true);
         eventNode().addListener(PlayerDisconnectEvent.class, e -> {saveInventory(); stop = true;});
         eventNode().addListener(PlayerBlockInteractEvent.class, this::onBlockInteract);
 
@@ -86,7 +85,7 @@ public class GenPlayer extends Player {
             damage(new Damage(DamageType.FALL, null, null, null, 100000));
         }
 
-        inSpawn = registry.isInSpawn(this, newPos);
+        inSpawn = registry.isInSpawn(this, newPos) != null;
     }
 
     private void onDrop(ItemDropEvent e) {
@@ -111,14 +110,14 @@ public class GenPlayer extends Player {
             return;
         }
 
-        GenBlock genBlock = registry.getItemDrop(block);
-        if (genBlock == null) {
+        GenBlockDrop drop = registry.getBlockDrop(e.getBlockPosition(), block);
+        if (drop == null) {
             if (!creative) e.setCancelled(true);
             return;
         }
 
         Random random = ThreadLocalRandom.current();
-        ItemStack item = genBlock.drop().generateDrop(random);
+        ItemStack item = drop.drop().generateDrop(random);
         if (getInventory().addItemStack(item)) {
             playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 0.2f, random.nextFloat(0.6f, 2.2f)));
         } else {
@@ -127,7 +126,7 @@ public class GenPlayer extends Player {
 
         Instance instance = e.getInstance();
         MinecraftServer.getSchedulerManager().scheduleTask(() -> {
-            instance.setBlock(e.getBlockPosition(), genBlock.block());
+            instance.setBlock(e.getBlockPosition(), drop.respawnBlock());
         }, TaskSchedule.seconds(10), TaskSchedule.stop());
     }
 

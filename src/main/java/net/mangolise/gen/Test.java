@@ -1,5 +1,6 @@
 package net.mangolise.gen;
 
+import net.hollowcube.polar.PolarLoader;
 import net.mangolise.gamesdk.permissions.Permissions;
 import net.mangolise.gamesdk.util.GameSdkUtils;
 import net.mangolise.gen.defaults.HashMapMangoGenRegistrySave;
@@ -7,8 +8,6 @@ import net.mangolise.gen.defaults.MangoGenRegistry;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
-
-import java.util.UUID;
 
 // This is a dev server, not used in production
 public class Test {
@@ -24,7 +23,8 @@ public class Test {
             Permissions.setPermission(e.getPlayer(), "*", true);
         });
 
-        GenGame.Config config = new GenGame.Config(new MangoGenRegistry(new HashMapMangoGenRegistrySave()));
+        PolarLoader loader = GameSdkUtils.getPolarLoaderFromResource("worlds/gen.polar");
+        GenGame.Config config = new GenGame.Config(new MangoGenRegistry(new HashMapMangoGenRegistrySave()), loader);
         GenGame game = new GenGame(config, GameSdkUtils::createFakeUUID);
         game.setup();
 
